@@ -46,20 +46,31 @@ app.delete("/user", async (req, res) => {
 });
 
 //update data of the user
-app.patch("/userDetails", async (req, res) => {
-  const userId = req.body.userId
+app.patch("/userDetails/:userId", async (req, res) => {
+  const userId = req.params?.userId;
   const data = req.body;
-  try{
-    const user = await User.findByIdAndUpdate(userId, data,{
-      returnDocument: "after",
-      runValidators: true
-    })
-    res.send("User updated successfully")
-  }
-  catch(err){
+  console.log(data);
+  
 
+  try {
+    const ALLOWD_UPDATES = ["gender", "photoUrl", "age", "about"];
+
+    const isUpdateAllowed = Object.keys(data).every((key) =>
+      ALLOWD_UPDATES.includes(key)
+    );
+    if (!isUpdateAllowed) {
+      throw new Error("update not allowed");
+    }
+
+    const user = await User.findByIdAndUpdate(userId, data, {
+      returnDocument: "after",
+      runValidators: true,
+    });
+    res.send("User updated successfully");
+  } catch (err) {
+    res.status(400).send("Update failed:" + err.message);
   }
-})
+});
 
 connectDB()
   .then(() => {

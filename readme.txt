@@ -1,0 +1,1 @@
+for email validator, use library - npm i validator

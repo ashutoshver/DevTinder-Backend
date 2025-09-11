@@ -1,39 +1,62 @@
 const mongoose = require("mongoose");
-const userSchema = new mongoose.Schema({
+const validator = require("validator");
+
+const userSchema = new mongoose.Schema(
+  {
     firstName: {
-        type: String,
-        required: true,
-        minLength: 3
+      type: String,
+      required: true,
+      minLength: 3,
     },
     lastName: {
-        type: String
+      type: String,
     },
     emailId: {
-        type: String,
-        required: true,
-        unique: true,
-        lowercase: true,
-        trim: true //for cut extra space
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true, //for cut extra space
+      validate(value) {
+        if (!validator.isEmail(value)) {
+          throw new Error("Invalid Email address");
+        }
+      },
     },
     password: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
+      validate(value) {
+        if (!validator.isStrongPassword(value)) {
+          throw new Error("Enter the strong Password");
+        }
+      },
     },
     age: {
-        type: Number
+      type: Number,
     },
     gender: {
-        type: String,
-        validate(value){
-            if(!["male", "female", "others"].includes(value)){
-                throw new Error("Gender is not valid")
-            }
+      type: String,
+      validate(value) {
+        if (!["male", "female", "others"].includes(value)) {
+          throw new Error("Gender is not valid");
         }
-    }
-},
-{
-    timestamps: true  //this is for, on which date user registered
-})
+      },
+    },
+    photoUrl: {
+      type: String,
+    },
+    about: {
+      type: String,
+    },
+    skills: {
+      type: [String], //there will be a multiple skills user have
+    },
+  },
+  {
+    timestamps: true, //this is for, on which date user registered
+  }
+);
 
 const User = mongoose.model("user", userSchema);
 
