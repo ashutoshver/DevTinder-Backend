@@ -2,15 +2,55 @@ const express = require("express");
 const connectDB = require("./config/database");
 const app = express();
 const User = require("./models/user");
+const validateSignupData = require("./utils/validation");
+const bcrypt = require("bcrypt");
+
 app.use(express.json()); // this is the middleware for changing req.body into json
 
 app.post("/signup", async (req, res) => {
-  const userObj = req.body;
+  console.log(req.body);
 
-  //Creating a new instance of user model
-  const user = new User(userObj);
-  await user.save();
-  res.send("User added successfully");
+  try {
+    //validation of data
+    validateSignupData(req);
+
+    //Encrypt the password
+    const { firstName, lastName, emailId, password } = req.body;
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    //Creating a new instance of user model
+    const user = new User({
+      firstName,
+      lastName,
+      emailId,
+      password: passwordHash,
+    });
+    await user.save();
+    res.send("User added successfully");
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+});
+
+//login api
+app.post("/login", async (req, res) => {
+  try {
+    const { emailId, password } = req.body;
+
+    const user = await User.findOne({ emailId: emailId }); //get email from database and compare login email
+    if (!user) {
+      throw new Error("Email id is not registered");
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (isPasswordValid) {
+      res.send("Login successful");
+    } else {
+      throw new Error("Password is not valid");
+    }
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
 });
 
 //get user from email
@@ -50,7 +90,6 @@ app.patch("/userDetails/:userId", async (req, res) => {
   const userId = req.params?.userId;
   const data = req.body;
   console.log(data);
-  
 
   try {
     const ALLOWD_UPDATES = ["gender", "photoUrl", "age", "about"];

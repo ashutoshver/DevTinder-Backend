@@ -17,20 +17,10 @@ const userSchema = new mongoose.Schema(
       unique: true,
       lowercase: true,
       trim: true, //for cut extra space
-      validate(value) {
-        if (!validator.isEmail(value)) {
-          throw new Error("Invalid Email address");
-        }
-      },
     },
     password: {
       type: String,
       required: true,
-      validate(value) {
-        if (!validator.isStrongPassword(value)) {
-          throw new Error("Enter the strong Password");
-        }
-      },
     },
     age: {
       type: Number,
