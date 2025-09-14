@@ -5,7 +5,8 @@ const User = require("./models/user");
 const validateSignupData = require("./utils/validation");
 const bcrypt = require("bcrypt");
 const cookieParser = require("cookie-parser");
-const jwt = require("jsonwebtoken")
+const jwt = require("jsonwebtoken");
+const { userAuth } = require("./middlewares/auth");
 
 app.use(express.json()); // this is the middleware for changing req.body into json
 app.use(cookieParser()); // this is middleware for read cookies
@@ -48,7 +49,7 @@ app.post("/login", async (req, res) => {
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (isPasswordValid) {
       //crate a JWT token
-      const token = await jwt.sign({ _id: user._id }, "DEV@TINDER$1412");
+      const token = await jwt.sign({ _id: user._id }, "DEV@TINDER$1412", {expiresIn: "12h"});
       //Add the token to cookies and send the response back to user
       res.cookie("token", token);
       res.send("Login successful");
@@ -60,27 +61,11 @@ app.post("/login", async (req, res) => {
   }
 });
 
-app.get("/profile", async (req, res) => {
+app.get("/profile", userAuth, async (req, res) => {
   try {
-    const cookies = req.cookies;
-    const { token } = cookies;
-    if (!token) {
-      throw new Error("Invalid token")
-    }
-
-    //validate the token
-    const decodeMessage = await jwt.verify(token, "DEV@TINDER$1412"); //it provides id of user from which you login
-    console.log(decodeMessage);
-
-    const { _id } = decodeMessage;
-    console.log(_id);
-
-    //now from id, you just get prfile of user
-    const user = await User.findById(_id);
-    if (!user) {
-      throw new Error("User does not exist");
-    }
-
+    const user = req.user;
+    console.log(user);
+    
     res.send(user)
   }
   catch (err) {
@@ -89,63 +74,6 @@ app.get("/profile", async (req, res) => {
 
 })
 
-//get user from email
-app.get("/user", async (req, res) => {
-  const userEmail = req.body.emailId;
-  try {
-    const user = await User.find({ emailId: userEmail }); // get single user via email
-    if (user?.length === 0) {
-      res.status(404).send("User not found");
-    } else {
-      res.send(user);
-    }
-  } catch (err) {
-    res.status(400).send("Something wend wrong");
-  }
-});
-
-//Feed api - GET /feed - get all the users from the database
-app.get("/feed", async (req, res) => {
-  try {
-    const users = await User.find({}); //get all the users data
-    res.send(users);
-  } catch (err) { }
-});
-
-//Delete user api
-app.delete("/user", async (req, res) => {
-  const userId = req.body.userId;
-  try {
-    const user = await User.findByIdAndDelete(userId);
-    res.send("user deleted succesfully");
-  } catch (err) { }
-});
-
-//update data of the user
-app.patch("/userDetails/:userId", async (req, res) => {
-  const userId = req.params?.userId;
-  const data = req.body;
-  console.log(data);
-
-  try {
-    const ALLOWD_UPDATES = ["gender", "photoUrl", "age", "about"];
-
-    const isUpdateAllowed = Object.keys(data).every((key) =>
-      ALLOWD_UPDATES.includes(key)
-    );
-    if (!isUpdateAllowed) {
-      throw new Error("update not allowed");
-    }
-
-    const user = await User.findByIdAndUpdate(userId, data, {
-      returnDocument: "after",
-      runValidators: true,
-    });
-    res.send("User updated successfully");
-  } catch (err) {
-    res.status(400).send("Update failed:" + err.message);
-  }
-});
 
 connectDB()
   .then(() => {
