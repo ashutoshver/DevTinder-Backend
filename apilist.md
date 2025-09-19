@@ -6,7 +6,7 @@ POST /logout
 
 GET /profile/view
 PATCH /profile/edit
-PATCH /profile/password
+PATCH /profile/forgetpassword
 
 POST /request/send/interested/:userId
 POST /request/send/ignored/:userId
