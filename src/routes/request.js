@@ -27,9 +27,6 @@ requestRouter.post(
         return res.status(404).json({ message: "User not found" });
       }
 
-      //don't send req to yourself
-
-
       //If there is an existing ConnectionRequest of same user,,
       const existingConnectionRequest = await ConnectionRequest.findOne({
         $or: [
