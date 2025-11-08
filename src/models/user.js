@@ -50,6 +50,8 @@ const userSchema = new mongoose.Schema(
   }
 );
 
+userSchema.index({firstName: 1})
+
 userSchema.methods.getJWT = async function () { //just use normal function because arrow function not work here
   const user = this;
   const token = await jwt.sign({ _id: user._id }, "DEV@TINDER$1412", { expiresIn: "12h" });
