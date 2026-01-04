@@ -9,9 +9,7 @@ PATCH /profile/edit
 PATCH /profile/forgetpassword
 
 POST /request/send/:status/:userId  (status = ignore or interested)
-
-POST /request/review/accepted/:requestId
-POST /request/review/rejected/:requestId
+POST /request/review/:status/:requestId  (status = accepted or rejected)
 
 GET /connections
 GET /request/received
